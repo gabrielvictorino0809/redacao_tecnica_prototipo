@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InterTexto — Sistema Multimodal de Intertextualidade</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root { --ink: #1a1207; --paper: #f5f0e8; --cream: #ede7d5; --accent: #c0392b; --gold: #b7860b; --muted: #6b5e4e; --card-bg: #fffdf8; --border: #d5c9b3; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--paper); color: var(--ink); min-height: 100vh; }
+    header { background: var(--ink); color: var(--paper); padding: 2.5rem 3rem; display: flex; align-items: flex-end; gap: 2rem; border-bottom: 4px solid var(--accent); }
+    header h1 { font-family: 'Playfair Display', serif; font-size: 2.8rem; font-weight: 700; letter-spacing: -1px; line-height: 1; }
+    header h1 em { color: var(--accent); font-style: italic; }
+    .header-sub { font-size: 0.85rem; opacity: 0.6; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px; }
+    .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border: 1px solid rgba(245,240,232,0.3); border-radius: 2px; opacity: 0.75; }
+    nav { background: var(--cream); border-bottom: 1px solid var(--border); padding: 0 3rem; display: flex; gap: 0; overflow-x: auto; }
+    nav button { font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; padding: 1rem 1.4rem; border: none; border-bottom: 3px solid transparent; background: none; color: var(--muted); cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+    nav button:hover { color: var(--ink); }
+    nav button.active { color: var(--accent); border-bottom-color: var(--accent); }
+    main { max-width: 980px; margin: 0 auto; padding: 3rem 2rem; }
+    .screen { display: none; animation: fadeIn 0.3s ease; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    h2 { font-family: 'Playfair Display', serif; font-size: 1.9rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--ink); }
+    h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 400; font-style: italic; color: var(--muted); margin-bottom: 2rem; }
+    p { line-height: 1.75; color: var(--muted); margin-bottom: 1rem; }
+    .type-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .type-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 2px; padding: 1.5rem; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+    .type-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--accent); opacity: 0; transition: opacity 0.2s; }
+    .type-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .type-card:hover::before { opacity: 1; }
+    .type-card.selected { border-color: var(--accent); background: #fff8f6; }
+    .type-card.selected::before { opacity: 1; }
+    .type-icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .type-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--ink); }
+    .type-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+    .detail-panel { background: var(--ink); color: var(--paper); border-radius: 2px; padding: 2rem 2.5rem; display: none; }
+    .detail-panel.visible { display: block; animation: fadeIn 0.3s ease; }
+    .detail-panel h4 { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; font-style: italic; color: #f5c6bb; margin-bottom: 1rem; }
+    .detail-panel p { color: rgba(245,240,232,0.8); font-size: 0.92rem; margin-bottom: 1rem; }
+    .example-box { background: rgba(255,255,255,0.07); border-left: 3px solid var(--accent); padding: 1rem 1.25rem; border-radius: 0 2px 2px 0; margin-top: 1rem; }
+    .example-box .label { font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.5rem; }
+    .example-box p { font-style: italic; font-size: 0.9rem; color: rgba(245,240,232,0.9); margin: 0; }
+    .builder-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    .builder-panel { background: var(--card-bg); border: 1px solid var(--border); border-radius: 2px; padding: 1.75rem; }
+    .builder-panel h4 { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--ink); border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    label { display: block; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.4rem; font-weight: 500; }
+    select, textarea, input[type="text"] { width: 100%; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--ink); background: var(--paper); border: 1px solid var(--border); border-radius: 2px; padding: 0.6rem 0.9rem; appearance: none; transition: border-color 0.2s; }
+    select:focus, textarea:focus, input:focus { outline: none; border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 100px; line-height: 1.6; }
+    .btn-primary { width: 100%; padding: 0.85rem; background: var(--accent); color: white; border: none; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; transition: background 0.2s; }
+    .btn-primary:hover { background: #a93226; }
+    .preview-area { min-height: 280px; border: 2px dashed var(--border); border-radius: 2px; padding: 1.5rem; display: flex; flex-direction: column; justify-content: center; align-items: center; color: var(--muted); font-size: 0.85rem; text-align: center; transition: all 0.3s; }
+    .preview-area.has-content { border-style: solid; border-color: var(--border); align-items: flex-start; justify-content: flex-start; }
+    .preview-output { width: 100%; }
+    .preview-tag { display: inline-block; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; margin-bottom: 1rem; }
+    .preview-tag.citacao { background: #e8f4f8; color: #1a6a8a; border: 1px solid #b5d8e8; }
+    .preview-tag.parodia { background: #fff0f0; color: var(--accent); border: 1px solid #f5c6bb; }
+    .preview-tag.parafraseie { background: #f0fff0; color: #2a7a3a; border: 1px solid #b5e8c0; }
+    .preview-tag.alusao { background: #fffbf0; color: var(--gold); border: 1px solid #f0dfa0; }
+    .preview-text-original { font-size: 0.78rem; color: var(--muted); border-left: 2px solid var(--border); padding-left: 0.75rem; margin-bottom: 1rem; font-style: italic; }
+    .preview-text-result { font-family: 'Playfair Display', serif; font-size: 1rem; line-height: 1.75; color: var(--ink); font-style: italic; }
+    .gallery-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 2rem; }
+    .filter-btn { padding: 6px 16px; border: 1px solid var(--border); border-radius: 2px; background: none; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .filter-btn:hover, .filter-btn.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; }
+    .gallery-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: 2px; overflow: hidden; transition: transform 0.2s; }
+    .gallery-item:hover { transform: translateY(-3px); }
+    .gallery-visual { height: 130px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; position: relative; overflow: hidden; }
+    .gallery-visual .bg-text { position: absolute; font-family: 'Playfair Display', serif; font-size: 5rem; font-style: italic; font-weight: 700; opacity: 0.08; color: var(--ink); pointer-events: none; }
+    .gallery-body { padding: 1.25rem; }
+    .gallery-type { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.4rem; }
+    .gallery-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: var(--ink); margin-bottom: 0.4rem; }
+    .gallery-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .skip-link { position: absolute; top: -40px; left: 1rem; background: var(--accent); color: white; padding: 8px 12px; border-radius: 2px; font-size: 0.85rem; z-index: 100; transition: top 0.2s; }
+    .skip-link:focus { top: 1rem; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(26,18,7,0.7); z-index: 1000; align-items: center; justify-content: center; padding: 2rem; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 2px; padding: 2.5rem; max-width: 540px; width: 100%; position: relative; animation: fadeIn 0.25s ease; }
+    .modal-close { position: absolute; top: 1rem; right: 1rem; background: none; border: none; cursor: pointer; font-size: 1.2rem; color: var(--muted); padding: 4px 8px; }
+    .modal-type { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.75rem; }
+    .modal-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; margin-bottom: 1rem; color: var(--ink); }
+    .modal-text { font-size: 0.9rem; line-height: 1.7; color: var(--muted); }
+    .modal-example { margin-top: 1.25rem; padding: 1rem; background: var(--cream); border-radius: 2px; font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.92rem; color: var(--ink); border-left: 3px solid var(--gold); }
+    footer { background: var(--ink); color: rgba(245,240,232,0.5); text-align: center; padding: 1.5rem; font-size: 0.78rem; letter-spacing: 0.06em; margin-top: 4rem; }
+    footer span { color: var(--accent); }
+    @media (max-width: 640px) { header { padding: 1.5rem; flex-direction: column; gap: 1rem; } header h1 { font-size: 2rem; } nav { padding: 0 1rem; } main { padding: 2rem 1rem; } .type-grid, .builder-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Ir para o conteúdo principal</a>
+  <h2 class="sr-only">InterTexto — Sistema Multimodal de Intertextualidade</h2>
+  <header>
+    <div>
+      <div class="header-sub">Sistema Multimodal Interativo</div>
+      <h1>Inter<em>Texto</em></h1>
+    </div>
+    <div>
+      <div class="badges">
+        <span class="badge">📝 Texto</span>
+        <span class="badge">🖼️ Imagem</span>
+        <span class="badge">🔊 Áudio</span>
+        <span class="badge">🎮 Interação</span>
+      </div>
+      <p style="color:rgba(245,240,232,0.5); font-size:0.8rem; margin-top:8px;">
+        Projeto de Análise e Desenvolvimento de Multimeios · Ana Lucia Spigolon
+      </p>
+    </div>
+  </header>
+  <nav role="navigation" aria-label="Seções do sistema">
+    <button class="active" onclick="showScreen('explorador', this)" aria-selected="true">🔍 Explorador</button>
+    <button onclick="showScreen('construtor', this)">✍️ Construtor</button>
+    <button onclick="showScreen('galeria', this)">🖼️ Galeria</button>
+    <button onclick="showScreen('roleta', this)">🎲 Roleta Visual</button>
+  </nav>
+  <main id="main-content">
+    <div class="screen active" id="screen-explorador">
+      <h2>Explorador de Tipos</h2>
+      <h3>Selecione um tipo para conhecer em profundidade</h3>
+      <div class="type-grid" role="list">
+        <div class="type-card" role="listitem" tabindex="0" onclick="showType('citacao')" onkeypress="if(event.key==='Enter')showType('citacao')">
+          <div class="type-icon" aria-hidden="true">❝</div>
+          <div class="type-name">Citação</div>
+          <div class="type-desc">Reprodução direta ou indireta de outro texto, com referência ao autor.</div>
+        </div>
+        <div class="type-card" role="listitem" tabindex="0" onclick="showType('parodia')" onkeypress="if(event.key==='Enter')showType('parodia')">
+          <div class="type-icon" aria-hidden="true">🎭</div>
+          <div class="type-name">Paródia</div>
+          <div class="type-desc">Imitação cômica ou crítica de um texto anterior, subvertendo seu sentido.</div>
+        </div>
+        <div class="type-card" role="listitem" tabindex="0" onclick="showType('parafraseie')" onkeypress="if(event.key==='Enter')showType('parafraseie')">
+          <div class="type-icon" aria-hidden="true">↔️</div>
+          <div class="type-name">Paráfrase</div>
+          <div class="type-desc">Reescrita do conteúdo original com novas palavras, mantendo o sentido.</div>
+        </div>
+        <div class="type-card" role="listitem" tabindex="0" onclick="showType('alusao')" onkeypress="if(event.key==='Enter')showType('alusao')">
+          <div class="type-icon" aria-hidden="true">💡</div>
+          <div class="type-name">Alusão</div>
+          <div class="type-desc">Referência indireta e sutil a outro texto, sem aprofundamento.</div>
+        </div>
+        <div class="type-card" role="listitem" tabindex="0" onclick="showType('epigrafe')" onkeypress="if(event.key==='Enter')showType('epigrafe')">
+          <div class="type-icon" aria-hidden="true">📜</div>
+          <div class="type-name">Epígrafe</div>
+          <div class="type-desc">Trecho de outro texto inserido no início de uma obra para introduzir seu tema.</div>
+        </div>
+        <div class="type-card" role="listitem" tabindex="0" onclick="showType('remix')" onkeypress="if(event.key==='Enter')showType('remix')">
+          <div class="type-icon" aria-hidden="true">🔀</div>
+          <div class="type-name">Remix / Releitura</div>
+          <div class="type-desc">Recriação de elementos sob nova linguagem ou mídia, gerando novo sentido.</div>
+        </div>
+      </div>
+      <div class="detail-panel" id="detail-panel" aria-live="polite"></div>
+    </div>
+    <div class="screen" id="screen-construtor">
+      <h2>Construtor de Intertextos</h2>
+      <h3>Crie sua própria relação intertextual</h3>
+      <div class="builder-layout">
+        <div class="builder-panel">
+          <h4>⚙️ Configuração</h4>
+          <div class="form-group">
+            <label for="source-text">Texto de origem (base)</label>
+            <textarea id="source-text" placeholder="Cole aqui o texto original que servirá de base..." aria-describedby="source-hint">Minha terra tem palmeiras,
+Onde canta o Sabiá;
+As aves, que aqui gorjeiam,
+Não gorjeiam como lá.</textarea>
+            <small id="source-hint" style="color:var(--muted); font-size:0.75rem; margin-top:4px; display:block;">Canção do Exílio — Gonçalves Dias (1843)</small>
+          </div>
+          <div class="form-group">
+            <label for="inter-type">Tipo de intertextualidade</label>
+            <select id="inter-type" aria-label="Selecione o tipo de intertextualidade">
+              <option value="citacao">Citação direta</option>
+              <option value="parodia">Paródia</option>
+              <option value="parafraseie">Paráfrase</option>
+              <option value="alusao">Alusão</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="user-theme">Seu tema / contexto</label>
+            <input type="text" id="user-theme" placeholder="Ex: tecnologia, saudade, humor..." value="tecnologia e redes sociais" aria-label="Tema do seu novo texto">
+          </div>
+          <div class="form-group">
+            <label for="user-text">Seu novo texto</label>
+            <textarea id="user-text" placeholder="Escreva aqui seu texto intertextual..." style="min-height:120px;" aria-describedby="user-hint">Minha terra tem wi-fi,
+Onde tuitam os influencers;
+As fotos que aqui postam,
+Não viralizam como lá.</textarea>
+            <small id="user-hint" style="color:var(--muted); font-size:0.75rem; margin-top:4px; display:block;">Escreva adaptando o texto base ao tipo escolhido</small>
+          </div>
+          <button class="btn-primary" onclick="buildPreview()" aria-label="Gerar prévia do intertexto">Gerar Prévia →</button>
+        </div>
+        <div class="builder-panel">
+          <h4>👁️ Prévia</h4>
+          <div class="preview-area" id="preview-area" aria-live="polite">
+            <div style="font-size:2rem; margin-bottom:1rem;" aria-hidden="true">✍️</div>
+            <p style="font-size:0.85rem;">Preencha as opções ao lado e clique em <em>"Gerar Prévia"</em></p>
+          </div>
+          <h4 style="margin-top:2.5rem;">📚 Banco de Dados (Salvos)</h4>
+          <div id="db-history" style="margin-top:1rem; max-height: 280px; overflow-y: auto; padding-right: 8px;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="screen" id="screen-galeria">
+      <h2>Galeria de Exemplos</h2>
+      <h3>Intertextualidade em múltiplas mídias e formatos</h3>
+      <div class="gallery-filter" role="group" aria-label="Filtros da galeria">
+        <button class="filter-btn active" onclick="filterGallery('todos', this)">Todos</button>
+        <button class="filter-btn" onclick="filterGallery('literatura', this)">Literatura</button>
+        <button class="filter-btn" onclick="filterGallery('digital', this)">Digital / Mídias</button>
+        <button class="filter-btn" onclick="filterGallery('visual', this)">Arte Visual</button>
+        <button class="filter-btn" onclick="filterGallery('musica', this)">Música</button>
+      </div>
+      <div class="gallery-grid" id="gallery-grid" role="list"></div>
+    </div>
+    <div class="screen" id="screen-roleta">
+      <h2>Roleta Visual</h2>
+      <h3>Descubra exemplos clássicos de intertextualidade na arte e cultura pop</h3>
+      <div class="card" style="text-align:center; padding: 3rem 2rem;">
+        <div id="random-image-container" style="min-height:300px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+          <div style="font-size:4rem; margin-bottom:1rem;" aria-hidden="true">🖼️</div>
+          <p style="color:var(--muted)">Clique no botão abaixo para carregar uma obra e sua relação intertextual.</p>
+        </div>
+        <button class="btn-primary" style="margin-top:2rem; max-width:300px;" onclick="loadRandomImage()">
+          Carregar Imagem Aleatória 🔄
+        </button>
+      </div>
+    </div>
+  </main>
+  <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeModal()" aria-label="Fechar">&times;</button>
+      <div class="modal-type" id="modal-type"></div>
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-text" id="modal-text"></div>
+      <div class="modal-example" id="modal-example"></div>
+    </div>
+  </div>
+  <footer>
+    <strong style="color:var(--paper)">InterTexto</strong> — Sistema Multimodal de Intertextualidade · Análise e Desenvolvimento de Multimeios · Professora <span>Ana Lucia Spigolon</span>
+  </footer>
+
+  <script src="database.js"></script>
+  <script>
+    function showScreen(id, btn) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('nav button').forEach(b => { b.classList.remove('active'); b.removeAttribute('aria-selected'); });
+      document.getElementById('screen-' + id).classList.add('active');
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      if (id === 'galeria') renderGallery('todos');
+    }
+
+    function showType(key) {
+      const d = typeData[key];
+      const panel = document.getElementById('detail-panel');
+      document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+      const index = Object.keys(typeData).indexOf(key);
+      if (index >= 0) document.querySelectorAll('.type-card')[index].classList.add('selected');
+      panel.innerHTML = `
+        <h4>${d.icon} ${d.name}</h4>
+        <p>${d.desc}</p>
+        <p><strong style="color:rgba(245,240,232,0.9)">Regras de uso:</strong> ${d.rules}</p>
+        <div class="example-box">
+          <div class="label">Exemplo Clássico</div>
+          <p>${d.example}</p>
+        </div>
+        <div class="example-box" style="border-color:#b7860b; background:rgba(183,134,11,0.07)">
+          <div class="label" style="color:#b7860b">Onde usar (Multimeios)</div>
+          <p>${d.multimeio}</p>
+        </div>
+      `;
+      panel.classList.add('visible');
+      panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function buildPreview() {
+      const source = document.getElementById('source-text').value.trim();
+      const type = document.getElementById('inter-type').value;
+      const theme = document.getElementById('user-theme').value.trim();
+      const userText = document.getElementById('user-text').value.trim();
+      const area = document.getElementById('preview-area');
+
+      if (!source || !userText) {
+        area.innerHTML = '<p style="color:var(--accent)">Preencha o texto de origem e o seu texto.</p>';
+        return;
+      }
+
+      const typeLabels = { citacao: 'Citação', parodia: 'Paródia', parafraseie: 'Paráfrase', alusao: 'Alusão' };
+      const typeDescs = {
+        citacao: 'Você referenciou diretamente o texto original, incorporando-o ao seu contexto.',
+        parodia: 'Você manteve a estrutura do original e subverteu o sentido com novo contexto.',
+        parafraseie: 'Você reescreveu o conteúdo original com suas próprias palavras, mantendo o sentido.',
+        alusao: 'Você aludiu ao texto original sem citá-lo explicitamente.'
+      };
+
+      area.classList.add('has-content');
+      area.innerHTML = `
+        <div class="preview-output">
+          <span class="preview-tag ${type}">${typeLabels[type]}</span>
+          ${theme ? `<span class="preview-tag muted" style="margin-left:6px">Tema: ${theme}</span>` : ''}
+          <div class="preview-text-original">
+            <div style="font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; font-style:normal;">Texto base</div>
+            ${source.replace(/n/g, '<br>')}
+          </div>
+          <div class="preview-text-result">
+            ${userText.replace(/n/g, '<br>')}
+          </div>
+          <div style="margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:flex-end;">
+            <div>
+              <div style="font-size:0.75rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); margin-bottom:6px;">Análise automática</div>
+              <p style="font-size:0.85rem; color:var(--muted); margin:0;">${typeDescs[type]}</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button onclick="saveToDB()" class="filter-btn" style="margin:0; min-width:80px; font-weight:bold; background:var(--gold); color:white; border-color:var(--gold);" aria-label="Salvar texto gerado">Salvar</button>
+              <button onclick="navigator.clipboard.writeText(document.querySelector('.preview-text-result').innerText); this.textContent='Copiado!'; setTimeout(() => this.textContent='Copiar', 2000)" class="filter-btn" style="margin:0; min-width:80px; font-weight:bold;" aria-label="Copiar texto gerado">Copiar</button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderGallery(filter) {
+      const grid = document.getElementById('gallery-grid');
+      const items = filter === 'todos' ? galleryData : galleryData.filter(i => i.cat === filter);
+      grid.innerHTML = items.map((item, idx) => `
+        <div class="gallery-item" role="listitem" tabindex="0" onclick="openModal(${galleryData.indexOf(item)})" onkeypress="if(event.key==='Enter')openModal(${galleryData.indexOf(item)})" aria-label="${item.title} — ${item.type}">
+          <div class="gallery-visual" style="background:${item.bg}">
+            <div class="bg-text" aria-hidden="true">${item.type[0]}</div>
+            <span aria-hidden="true" style="font-size:3rem;">${item.icon}</span>
+          </div>
+          <div class="gallery-body">
+            <div class="gallery-type">${item.type}</div>
+            <div class="gallery-title">${item.title}</div>
+            <div class="gallery-desc">${item.desc}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function filterGallery(cat, btn) {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderGallery(cat);
+    }
+
+    function openModal(idx) {
+      const item = galleryData[idx];
+      document.getElementById('modal-type').textContent = item.type;
+      document.getElementById('modal-title').textContent = item.title;
+      document.getElementById('modal-text').textContent = item.detail;
+      document.getElementById('modal-example').textContent = item.example;
+      document.getElementById('modal').classList.add('open');
+      document.getElementById('modal').querySelector('.modal-close').focus();
+    }
+
+    function closeModal() {
+      document.getElementById('modal').classList.remove('open');
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    function saveToDB() {
+      const source = document.getElementById('source-text').value.trim();
+      const type = document.getElementById('inter-type').value;
+      const userText = document.getElementById('user-text').value.trim();
+      if (!source || !userText) return;
+
+      const newItem = {
+        id: Date.now(),
+        date: new Date().toLocaleDateString('pt-BR') + ' ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+        type: type,
+        source: source,
+        text: userText
+      };
+
+      let db = JSON.parse(localStorage.getItem('intertexto_db')) || [];
+      db.unshift(newItem);
+      localStorage.setItem('intertexto_db', JSON.stringify(db));
+
+      const saveBtn = document.querySelector('button[aria-label="Salvar texto gerado"]');
+      if (saveBtn) {
+        saveBtn.textContent = 'Salvo!';
+        setTimeout(() => saveBtn.textContent = 'Salvar', 2000);
+      }
+      loadDB();
+    }
+
+    function loadDB() {
+      const container = document.getElementById('db-history');
+      if (!container) return;
+
+      let db = JSON.parse(localStorage.getItem('intertexto_db')) || [];
+      if (db.length === 0) {
+        container.innerHTML = '<p style="font-size:0.8rem; color:var(--muted);">Nenhum intertexto salvo ainda.</p>';
+        return;
+      }
+
+      container.innerHTML = db.map(item => `
+        <div style="background:var(--cream); padding:1rem; border-radius:2px; margin-bottom:1rem; border-left:3px solid var(--gold);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-size:0.65rem; text-transform:uppercase; color:var(--accent);">${item.date} — ${item.type}</span>
+            <button onclick="deleteFromDB(${item.id})" style="background:none; border:none; color:var(--muted); font-size:1rem; cursor:pointer;" aria-label="Excluir">&times;</button>
+          </div>
+          <div style="font-size:0.85rem; font-family:'Playfair Display',serif; font-style:italic; color:var(--ink);">"${item.text.replace(/n/g, '<br>')}"</div>
+        </div>
+      `).join('');
+    }
+
+    function deleteFromDB(id) {
+      if (!confirm('Deseja realmente excluir este item?')) return;
+      let db = JSON.parse(localStorage.getItem('intertexto_db')) || [];
+      db = db.filter(item => item.id !== id);
+      localStorage.setItem('intertexto_db', JSON.stringify(db));
+      loadDB();
+    }
+
+    function loadRandomImage() {
+      const container = document.getElementById('random-image-container');
+      const randomItem = randomImagesData[Math.floor(Math.random() * randomImagesData.length)];
+      
+      container.innerHTML = `
+        <div style="animation: fadeIn 0.4s ease;">
+          <img src="${randomItem.url}" alt="${randomItem.title}" style="max-width:100%; max-height:400px; border: 4px solid var(--border); border-radius: 2px; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <div style="max-width:600px; margin:0 auto; text-align:left;">
+            <div class="preview-tag muted" style="margin-bottom:8px; display:inline-block; border-color:var(--gold); color:var(--gold);">${randomItem.type}</div>
+            <h4 style="font-family:'Playfair Display', serif; font-size:1.4rem; color:var(--ink); margin-bottom:10px;">${randomItem.title}</h4>
+            <p style="font-size:0.95rem; color:var(--muted); line-height:1.6;">${randomItem.desc}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderGallery('todos');
+      loadDB();
+    });
+  </script>
+</body>
+</html>
